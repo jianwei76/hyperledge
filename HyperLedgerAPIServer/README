@@ -1,5 +1,8 @@
 JSON-RPC API for hyperledger fabric control 
 
+You must add chaincode 'cttichai.go' to your hyperledger fabric network.
+Deploy path: "github.com/hyperledger/fabric/myChaincode" or you can change 'deployChaincodePath' in 'JsonRPCServer.py' file.
+
 Database: MongoDB version 3.4
 hyperledger fabric: preview version 0.6
 First start: Run build.sh and run.sh (Only support docker environment)
