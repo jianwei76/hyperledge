@@ -7,6 +7,7 @@ When server starting, it will auto deploy chaincode by 'deployChaincodePath'.
 Database: MongoDB version 3.4
 hyperledger fabric: preview version 0.6
 First start: Run build.sh and run.sh (Only support docker environment)
+Usage: ./run.sh [DB_HOST_ADDRESS] [HYPERLEDGE_API_URL] [CONTAINER_NAME]
 
 JSON RPC API
 
