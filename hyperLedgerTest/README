@@ -1,0 +1,130 @@
+JSON-RPC API 
+
+1.submit
+    request
+        {
+            "method": "submit",
+            "params": ["Account", "Password"],
+            "jsonrpc": "2.0",
+            "id": 0,
+        }
+    response - Success
+        {
+            u'jsonrpc': u'2.0',
+            u'result': [True, u'da97ec8e-089f-46e6-8a76-2c8ed63ec6d8'], 
+            u'id': 0
+        }
+    response - Failure
+        {
+            u'jsonrpc': u'2.0', 
+            u'result': [False, u'This account is Already exist.'], 
+            u'id': 0
+        }
+2.login
+    request
+        {
+            "method": "login",
+            "params": ["Account", "Password"],
+            "jsonrpc": "2.0",
+            "id": 0,
+        }
+    response - Success
+        {
+            u'jsonrpc': u'2.0', 
+            u'result': [True, u'Login Success', 
+            u'[loginID]', 
+            u'2017-03-24 04:54:23.397596'], 
+            u'id': 0
+        }
+    response - Failure
+        {
+            u'jsonrpc': u'2.0', 
+            u'result': [False, u'This account is not exist.'], 
+            u'id': 0
+        }
+3.logout
+    request
+        {
+            "method": "logout",
+            "params": ["Account",[loginID],"Account"],
+            "jsonrpc": "2.0",
+            "id": 0, 
+        }
+    response - Success
+        {
+            u'jsonrpc': u'2.0', 
+            u'result': [True, u'Login Success'], 
+            u'id': 0
+        }
+    response - Failure
+        {
+            u'jsonrpc': u'2.0', 
+            u'result': [False, u'Logout failure'], 
+            u'id': 0
+        }
+4.transfer
+    request
+        {
+            "method": "transfer",
+            "params": ["Account1",[Account1_loginID],"Account2","[COins]"],
+            "jsonrpc": "2.0",
+            "id": 0, 
+        }
+    response - Success
+        {
+            u'jsonrpc': u'2.0', 
+            u'result': [True, u'Start transfer Coins!'], 
+            u'id': 0
+        }
+    response - Failure
+        {
+            u'jsonrpc': u'2.0', 
+            u'result': [False, u'Target account is not exist.'], 
+            u'id': 0
+        }
+5.queryBalance
+    request
+        {
+            "method": "queryBalance",
+            "params": ["Account",[loginID],"Account"],
+            "jsonrpc": "2.0",
+            "id": 0, 
+        }
+    response - Success
+        {
+            u'jsonrpc': u'2.0', 
+            u'result': [True, u'99998999'], 
+            u'id': 0
+        }
+    response - Failure
+        {
+            u'jsonrpc': u'2.0', 
+            u'result': [False, u'Query: Account is not exist.'], 
+            u'id': 0
+        }
+6.queryTransationList
+    request
+        {
+            "method": "queryTransationList",
+            "params": ["Account",[loginID],"Account"],
+            "jsonrpc": "2.0",
+            "id": 0, 
+        }
+    response - Success
+        {
+            u'jsonrpc': u'2.0', 
+            u'result': [True, u' [{
+                u'Details': {
+                    u'ToID': u'test1', 
+                    u'FromID': u'test3', 
+                    u'Coins': 1000, 
+                    u'TransationType': 0
+                    }, u'TransationID': u'XVLBZGBAICMRAJWWHTHCTCUAXHXKQFDA-2017-03-22T02:51:41Z'}]'], 
+            u'id': 0
+        }
+    response - Failure
+        {
+            u'jsonrpc': u'2.0', 
+            u'result': [False, u'Query: Account is not exist.'], 
+            u'id': 0
+        }
