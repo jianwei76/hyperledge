@@ -1,4 +1,10 @@
-JSON-RPC API 
+JSON-RPC API for hyperledger fabric control 
+
+Database: MongoDB version 3.4
+hyperledger fabric: preview version 0.6
+First start: Run build.sh and run.sh (you must docker support)
+
+JSON RPC API
 
 1.submit
     request
