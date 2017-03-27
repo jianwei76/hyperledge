@@ -1,6 +1,6 @@
 JSON-RPC API for hyperledger fabric control 
 
-You must add chaincode 'cttichai.go' to your hyperledger fabric network.
+You must add chaincode 'cttichain.go' to your hyperledger fabric network.
 Deploy path: "github.com/hyperledger/fabric/myChaincode" or you can change 'deployChaincodePath' in 'JsonRPCServer.py' file.
 When server starting, it will auto deploy chaincode by 'deployChaincodePath'.
 
