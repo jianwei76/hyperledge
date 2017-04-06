@@ -36,7 +36,7 @@ def submit(*args, **kwargs):
             'method': 'invoke',
             'ChainCodeID' : DeployChaincodeID,
             'function':"createAccount",
-            'chainCodeArgs':[account,"1000"]
+            'chainCodeArgs':[account,"100000000000000000"]
         }
     try:
         print DeployChaincodeID
@@ -124,7 +124,7 @@ def transfer(*args, **kwargs):
     if not certificateLoginToken(account=MainAccount,token=MainAccountCertToken):
         return False, "certificate error"
     #Check Target account is exist
-    check, Message = accountCheck(TargetAccount)
+    check, Message,_ = accountCheck(TargetAccount)
     if not check:
         print Message
         return False, "Target account is not exist."
