@@ -124,13 +124,7 @@ JSON RPC API
     response - Success
         {
             u'jsonrpc': u'2.0', 
-            u'result': [True, u' [{
-                u'Details': {
-                    u'ToID': u'test1', 
-                    u'FromID': u'test3', 
-                    u'Coins': 1000, 
-                    u'TransationType': 0
-                    }, u'TransationID': u'XVLBZGBAICMRAJWWHTHCTCUAXHXKQFDA-2017-03-22T02:51:41Z'}]'], 
+            u'result': [True, u' [u'16f6d02707bf90e3a6ff28bf2177a181', u'a35afba790c8272af01ffc8ad996141f', u'6619749e6b62592b3f026286dc74299f', u'6e9cbe204e26d62727b4089b19a90875', u'd7c050ec9ecd24f3a0bb873da40852b3', u'44e535c23d1bb52b27518bab9cdaf6a4', u'19d22bde523bdcefb36a97fdec8e548d', u'1cbe4130adda722bb70ef1f9ae4fdff2', u'e35057ac18f4f3cbd2351a7a2b2583bf', u'8ff77ca62b4805fc0f3a9f44a2dd0f01', u'0c2ae060d16fa38a75b9159bec2ae709', u'df3bf411e760d41990174d4c289c0576', u'a80211de12c6fb431e987b273076b207', u'9c967a15229d0f9d3e14faefe5949c2e']'], 
             u'id': 0
         }
     response - Failure
@@ -139,3 +133,22 @@ JSON RPC API
             u'result': [False, u'Query: Account is not exist.'], 
             u'id': 0
         }
+7.queryTransaction
+   request
+	{
+		'jsonrpc': '2.0', 
+		'params': [ "Account", [loginID], [transaction_id]], 
+		'method': 'queryTransaction', 
+		'id': 0
+	}
+    response - Success
+	{
+		u'jsonrpc': u'2.0', 
+		u'result': [True,	
+			{u'Details': {
+				u'ToID': u'test1', 
+				u'FromID': u'test1', 
+				u'Coins': 100000, u'TransationType': 1}, 
+			u'TransationID': u'd7c050ec9ecd24f3a0bb873da40852b3'}], 
+	u'id': 0}
+
