@@ -32,7 +32,7 @@ type TransationDetail struct {
 	ToID           string
 	FromID         string
 	Coins          int
-	date           string
+	Date           string
 }
 
 var defaultInitCoin = 1000
@@ -136,7 +136,7 @@ func (t *CTTiChaincode) addCoinToAccount(stub shim.ChaincodeStubInterface, args 
 		ToID:           accountA.Account,
 		FromID:         accountA.Account,
 		Coins:          accountTransferValue,
-		date:           time.Now().Format(time.RFC3339)}
+		Date:           time.Now().Format(time.RFC3339)}
 	transationID := randStringBytes(32)
 	transationItem := Transation{TransationID: transationID, Details: transationDetailItem}
 	accountA.TransationIDList = append(accountA.TransationIDList, transationItem.TransationID)
@@ -183,7 +183,7 @@ func (t *CTTiChaincode) transfer(stub shim.ChaincodeStubInterface, args []string
 		ToID:           accountB.Account,
 		FromID:         accountA.Account,
 		Coins:          accountTransferValue,
-		date:           time.Now().Format(time.RFC3339)}
+		Date:           time.Now().Format(time.RFC3339)}
 
 	transationID := randStringBytes(32)
 	transationItem := Transation{TransationID: transationID, Details: transationDetailItem}
