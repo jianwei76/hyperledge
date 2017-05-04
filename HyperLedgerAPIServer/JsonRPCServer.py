@@ -1,4 +1,4 @@
-#-*-coding:utf-8 -*-
+
 from werkzeug.wrappers import Request, Response
 from werkzeug.serving import run_simple
 from jsonrpc import JSONRPCResponseManager, dispatcher 
@@ -26,21 +26,23 @@ def submit(*args, **kwargs):
     usr = {
         "account" : account
         , "salt" : salt
-        , "password": binascii.hexlify(hashlib.pbkdf2_hmac('sha256', str(password), str(salt), 100000))
+        , "password": binascii.hexlify(hashlib.pbkdf2_hmac('sha256', str(password), str(salt), 100000)),
+        "permission": 1
+        # 1 normal user, 0 admin 
     }
     if coll.find(acc).count() >= 1:
         #DB.client.close()
-        return False, "This account is Already exist."
+        return False, "This account is already exist."
     coll.insert_one(usr)
     submit = {
             'method': 'invoke',
             'ChainCodeID' : DeployChaincodeID,
             'function':"createAccount",
-            'chainCodeArgs':[account,"100000000000000000"]
+            'chainCodeArgs':[account,"1000"]
         }
     try:
         print DeployChaincodeID
-        execResult, message = execTransation(Method="invoke", param=submit, executeUser=MasterAdmin)
+        execResult, message = execTransaction(Method="invoke", param=submit, executeUser=MasterAdmin)
     except:
         coll.delete_many(usr)
         return False, "Create Account failure..."
@@ -62,6 +64,7 @@ def login(*args, **kwargs):
     result, message, target = accountCheck(account=account)
     if not result:
         return  False, "This account is not exist."
+    
     result = hashlib.pbkdf2_hmac('sha256', password, target[0]['salt'], 100000)
     if  str(binascii.hexlify(result)) == target[0]['password']:
         token = randomToken(length=128)
@@ -95,7 +98,8 @@ def logout(*args, **kwargs):
     if not certificateLoginToken(account=MainAccount,token=MainAccountCertToken):
         return False, "certificate error"
     #Check Target account is exist
-    if (not MainAccount == MasterAdmin) and (not MainAccount == TargetAccount):
+    admin, mesaage = permissionCheck(account=MainAccount, permissionLevel=0)
+    if (not admin) and (not MainAccount == TargetAccount):
         return False, "Normal user can not logout other user."
     check, Message, target = accountCheck(TargetAccount)
     if not check:
@@ -124,10 +128,15 @@ def transfer(*args, **kwargs):
     if not certificateLoginToken(account=MainAccount,token=MainAccountCertToken):
         return False, "certificate error"
     #Check Target account is exist
+
+    result, message = queryBalance(MainAccount,MainAccountCertToken,MainAccount)
     check, Message,_ = accountCheck(TargetAccount)
-    if not check:
-        print Message
+    if (not check) or (not result):
         return False, "Target account is not exist."
+    MainAccountCoin = int(message)
+    CoinsBalance = int(Coins)
+    if MainAccountCoin < CoinsBalance:
+        return False, "Target account's coins is not enough"
     transferParam = {
         'method': 'invoke',
         "function":"transfer",
@@ -136,7 +145,7 @@ def transfer(*args, **kwargs):
         }
     
     try:
-        execResult, message = execTransation(Method="invoke", param=transferParam, executeUser=MasterAdmin)
+        execResult, message = execTransaction(Method="invoke", param=transferParam, executeUser=MasterAdmin)
     except: 
         return False, "Unexpected error: "+ message['error']['message']
     if not execResult:
@@ -167,12 +176,59 @@ def queryTransationList(*args, **kwargs):
        if not result:
             return False, message
       #print json.loads(coin)['Coin']
-       return True, message['Transations']
+       return True, message['TransationIDList']
     except:
        return False, message
+@dispatcher.add_method
+def addCoinToUser(*args, **kwargs):
+    # [Admin] [AdminToken] [TargetAccount] [coins]
+    # Only work with Admin
+    if args.count < 4:
+        return False, "Args number Error.."
+    resultArray = []
+    try:
+        admin = args[0]
+        token = args[1]
+        check = certificateLoginToken(admin, token)
+        if not check:
+            return False, "certificate error"
+        targetAccount = args[2]
+        coins = args[3]
+        check, message = permissionCheck(admin, 0)
+        if not check:
+            return False, "You don't have permission."
+    except:
+        return False, "Unexpected error in certificate stage"
+
+    addCoinToAccounts = {
+        'method': 'invoke',
+        "function":"addCoinToAccount",
+        "chainCodeArgs":[targetAccount,coins],
+        "ChainCodeID": DeployChaincodeID
+    }
+
+    check, message, target = accountCheck(targetAccount)
+    if not check:
+        return False, targetAccount+" is not exist." # admin query
+
+    #print "Going to blockchain Query!"
+    try:
+        execResult, message = execTransaction(Method="invoke",param=addCoinToAccounts, executeUser=MasterAdmin)
+        print(message)
+        if not execResult:
+            return execResult, "Add failure: "+ message
+        try:
+           coin = message['result']['message']
+          #print json.loads(coin)['Coin']
+           return True, "Ok!! start add coins to \'" + targetAccount + "\'"
+        except:
+           return False, message['error']['message']
+    except:
+        return False,  "Add Coins to \'" + targetAccount+ "\' error!"
+
 
 @dispatcher.add_method
-def transation(*args, **kwargs):
+def transaction(*args, **kwargs):
     if args.count < 4:
         return False, "Args number Error.."
     resultArray = []
@@ -188,10 +244,10 @@ def transation(*args, **kwargs):
     certParamsNumber = 3
     for i in range(certParamsNumber,transationNumber+certParamsNumber):
         param = args[i]
-        result, response = execTransation(param['method'],param,args[0])
+        result, response = execTransaction(param['method'],param,args[0])
         resultArray.append({"result":result, "message": response})
     return True, resultArray
-def execTransation(Method=None, param={}, executeUser=None):
+def execTransaction(Method=None, param={}, executeUser=None):
     if not executeUser == MasterAdmin:
         return False, "Only admin can execution transation."
     if Method is None or executeUser is None:
@@ -224,14 +280,53 @@ def execTransation(Method=None, param={}, executeUser=None):
 def application(request):
     dispatcher.add_method(login, name="login")
     dispatcher.add_method(submit, name="submit")
-    dispatcher.add_method(transation, name="transation")
+    dispatcher.add_method(transaction, name="transaction")
     dispatcher.add_method(transfer, name="transfer")
     dispatcher.add_method(queryBalance, name="queryBalance")
-
+    dispatcher.add_method(queryTransaction, name="queryTransaction")
     response = JSONRPCResponseManager.handle(
         request.data, dispatcher)
   
     return Response(response.json, mimetype='application/json')
+@dispatcher.add_method
+def queryTransaction(*args):
+    # [account] [accountToken] [TransactionID]// 僅有使用者自己與管理者可以查詢，該使用者的帳本
+    # normal user: TransactionID >> find Transaction details data
+    if len(args) != 3:
+        return False, "Args number Error"
+    #print "Start Query!"
+    try:
+        targetAccount = args[0]
+        token = args[1]
+        check = certificateLoginToken(targetAccount, token)
+        TransactionID = args[2]
+        if not check:
+            return False, "Certificate error"
+        query = {
+            'method': 'invoke',
+            "function":"query",
+            "chainCodeArgs":[TransactionID],
+            "ChainCodeID": DeployChaincodeID
+        }
+    except:
+        return False, "Unexpected error in certificate stage"
+    check, message, target = accountCheck(targetAccount)
+    if not check:
+        return False, "Query: TransactionID is not exist." # admin query
+
+    #print "Going to blockchain Query!"
+    try:
+        execResult, message = execTransaction(Method="query",param=query, executeUser=MasterAdmin)
+    except:
+        return False, "Query \'" +targetAccount+ "\' error!"
+    if not execResult:
+        return execResult, "Query failure: "+ message
+    try:
+       coin = message['result']['message']
+      #print json.loads(coin)['Coin']
+       return True, json.loads(coin)
+    except:
+       return False, message['error']['message']
 def queryUserLedger(*args):
     # [account] [accountToken] [targetAccount]// 僅有使用者自己與管理者可以查詢，該使用者的帳本
     # normal user: account == targetAccount, Admin user: account == 'admin' and targetAccount == 'OtherUser'
@@ -260,14 +355,14 @@ def queryUserLedger(*args):
         return False, "Normal user can not query other user."
     #print "Going to blockchain Query!"
     try:
-        execResult, message = execTransation(Method="query",param=query, executeUser=MasterAdmin)
+        execResult, message = execTransaction(Method="query",param=query, executeUser=MasterAdmin)
     except:
         return False, "Query \'" +targetAccount+ "\' error!"
     if not execResult:
         return execResult, "Query failure: "+ message
     try:
        coin = message['result']['message']
-      #print json.loads(coin)['Coin']
+       print json.loads(coin)
        return True, json.loads(coin)
     except:
        return False, message['error']['message']
@@ -293,6 +388,17 @@ def certificateLoginToken(account=None, token=None):
         if now < timeout:
             return True
     return False
+def permissionCheck(account, permissionLevel):
+    accountJSON = {
+         "account":account,
+         "permission":permissionLevel
+        }
+    accountColl = DB.get_collection(name = accountCollectionName)
+    result = accountColl.find(accountJSON)
+    if result.count() != 1:
+        return False, "Error: Account access permisson denied or Unexpected Account Error"
+    return True, "Ok!"
+
 def accountCheck(account=None):
     accountJSON = {
          "account":account,
@@ -319,7 +425,8 @@ def startSetting():
     admin={
         "account":MasterAdmin,
         "salt":rootToken,
-        "password":binascii.hexlify(hashlib.pbkdf2_hmac('sha256', str("admin"), str(rootToken), 100000))
+        "password":binascii.hexlify(hashlib.pbkdf2_hmac('sha256', str("admin"), str(rootToken), 100000)),
+        "permission": 0
         # Default admin password.
     }
     loginCol = DB.get_collection(name=loginStatusColl)
@@ -337,7 +444,7 @@ def startSetting():
         'ChaincodePath': deployChaincodePath,
         'chainCodeArgs': ["N/A"]
         }
-    deployChaincode, resultMessage = execTransation(Method="deploy", param=deploy, executeUser=MasterAdmin)
+    deployChaincode, resultMessage = execTransaction(Method="deploy", param=deploy, executeUser=MasterAdmin)
     if not deployChaincode:
         return False, "Init Deploy Failure:" + resultMessage
     else:
@@ -355,7 +462,7 @@ if __name__ == '__main__':
         DB_IP = sys.argv[1]
         BC_IP = sys.argv[2]
     #DB config 
-    MasterAdmin = "admin"
+    MasterAdmin = "admin@iii.org.tw"
     DB_HOST = DB_IP
     DB_NAME = "UsrStatus"
     #DB table: Account -> main account loginStatus -> login record
@@ -373,6 +480,6 @@ if __name__ == '__main__':
     print Message
     if result:
         DeployChaincodeID = chaincodeID
-        run_simple(hostname='0.0.0.0', port=4000, application=application, threaded=True, ssl_context=None)
+        run_simple(hostname="0.0.0.0", port=4000, application=application, threaded=True, ssl_context=None)
     else:
         print "Error -> exit"

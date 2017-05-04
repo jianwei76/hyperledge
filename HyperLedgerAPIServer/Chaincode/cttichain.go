@@ -1,7 +1,7 @@
 package main
 
 import (
-	"crypto/md5"
+	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -18,19 +18,21 @@ import (
 type CTTiChaincode struct {
 }
 type Account struct {
-	Account     string
-	Coin        int
-	Transations []Transation
+	Account          string
+	Coin             int
+	TransationStatus string
+	TransationIDList []string
 }
 type Transation struct {
 	TransationID string
 	Details      TransationDetail
 }
 type TransationDetail struct {
-	TransationType int // transfer:0
+	TransationType int // transfer:0 , addCoinToAccount:1
 	ToID           string
 	FromID         string
 	Coins          int
+	date           string
 }
 
 var defaultInitCoin = 1000
@@ -41,7 +43,7 @@ func (t *CTTiChaincode) Init(stub shim.ChaincodeStubInterface, function string, 
 	var err error
 	var account Account
 	var transtions []Transation
-	account = Account{defaultRootAccount, defaultInitCoin, nil}
+	account = Account{defaultRootAccount, defaultInitCoin, "", nil}
 
 	accountJSON, err := json.Marshal(account)
 	if err != nil {
@@ -77,6 +79,10 @@ func (t *CTTiChaincode) Invoke(stub shim.ChaincodeStubInterface, function string
 		// must check A's certificate token (and B?)
 		return t.transfer(stub, args)
 	}
+	if function == "addCoinToAccount" {
+		// Add extra coins to target accoount.
+		return t.addCoinToAccount(stub, args)
+	}
 	return nil, nil
 }
 func (t *CTTiChaincode) createAccount(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
@@ -96,7 +102,7 @@ func (t *CTTiChaincode) createAccount(stub shim.ChaincodeStubInterface, args []s
 		return nil, errors.New("Error execution: Account is already exist.(" + args[0] + ")")
 	}
 
-	accountStruct := Account{Account: account, Coin: accountBal, Transations: nil}
+	accountStruct := Account{Account: account, Coin: accountBal, TransationIDList: nil, TransationStatus: getHash("New")}
 	accountJSON, err := json.Marshal(accountStruct)
 	fmt.Printf("Create Account:%s\n", string(accountJSON))
 	if err != nil {
@@ -105,6 +111,44 @@ func (t *CTTiChaincode) createAccount(stub shim.ChaincodeStubInterface, args []s
 	err = stub.PutState(account, accountJSON)
 	if err != nil {
 		return nil, err
+	}
+	return nil, nil
+}
+func (t *CTTiChaincode) addCoinToAccount(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	//[account] [Coins]
+	if len(args) != 2 {
+		return nil, errors.New("Incorrect number of arguments. Expecting 2")
+	}
+
+	account := args[0]
+	accountTransferValue, err := strconv.Atoi(args[1])
+	if err != nil {
+		return nil, errors.New("Error execution: Output:" + args[1])
+	}
+
+	accountA, err := t.getUserAccount(stub, account)
+	if err != nil {
+		return nil, err
+	}
+	accountA.Coin = accountA.Coin + accountTransferValue
+	transationDetailItem := TransationDetail{
+		TransationType: 1,
+		ToID:           accountA.Account,
+		FromID:         accountA.Account,
+		Coins:          accountTransferValue,
+		date:           time.Now().Format(time.RFC3339)}
+	transationID := randStringBytes(32)
+	transationItem := Transation{TransationID: transationID, Details: transationDetailItem}
+	accountA.TransationIDList = append(accountA.TransationIDList, transationItem.TransationID)
+	accountA.TransationStatus = getHash(accountA.TransationStatus + transationID)
+	err = t.addTransationData(stub, transationItem)
+	if err != nil {
+		return nil, err
+	}
+	// Write the state back to the ledger
+	err = t.setUserAccount(stub, accountA)
+	if err != nil {
+		return nil, errors.New("Save usr data " + accountA.Account + " with error:" + err.Error())
 	}
 	return nil, nil
 }
@@ -134,11 +178,19 @@ func (t *CTTiChaincode) transfer(stub shim.ChaincodeStubInterface, args []string
 	accountB.Coin = accountB.Coin + accountTransferValue
 	fmt.Printf("Aval = %d, Bval = %d\n", accountA.Coin, accountB.Coin)
 	//transationDetail := TransationDetail{transationType=0, toID=accountB.account,fromID=accountA.account,coins=accountTransferValue}
-	transationDetailItem := TransationDetail{TransationType: 0, ToID: accountB.Account, FromID: accountA.Account, Coins: accountTransferValue}
-	transationID := RandStringBytesWithTime(32)
+	transationDetailItem := TransationDetail{
+		TransationType: 0,
+		ToID:           accountB.Account,
+		FromID:         accountA.Account,
+		Coins:          accountTransferValue,
+		date:           time.Now().Format(time.RFC3339)}
+
+	transationID := randStringBytes(32)
 	transationItem := Transation{TransationID: transationID, Details: transationDetailItem}
-	accountA.Transations = append(accountA.Transations, transationItem)
-	accountB.Transations = append(accountB.Transations, transationItem)
+	accountA.TransationIDList = append(accountA.TransationIDList, transationItem.TransationID)
+	accountA.TransationStatus = getHash(accountA.TransationStatus + transationID)
+	accountB.TransationIDList = append(accountB.TransationIDList, transationItem.TransationID)
+	accountB.TransationStatus = getHash(accountB.TransationStatus + transationID)
 	err = t.addTransationData(stub, transationItem)
 	if err != nil {
 		return nil, err
@@ -165,6 +217,7 @@ func (t *CTTiChaincode) getUserAccount(stub shim.ChaincodeStubInterface, account
 		return Account{}, err
 	}
 	accounts := Account{}
+
 	err = json.Unmarshal(accountData, &accounts)
 	if err != nil {
 		return Account{}, err
@@ -180,6 +233,7 @@ func (t *CTTiChaincode) setUserAccount(stub shim.ChaincodeStubInterface, account
 	if err != nil {
 		return err
 	}
+	fmt.Printf("Save Account-(%s):%s\n", account.Account, string(accountJSON))
 	err = stub.PutState(account.Account, accountJSON)
 	if err != nil {
 		return err
@@ -221,25 +275,35 @@ func (t *CTTiChaincode) addTransationData(stub shim.ChaincodeStubInterface, tran
 	if err != nil {
 		return err
 	}
+	userTransation, err := json.Marshal(transations)
+	err = stub.PutState(transations.TransationID, userTransation)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-func GetMD5Hash(text string) string {
-	hasher := md5.New()
+//hash with sha256
+func getHash(text string) string {
+	hasher := sha256.New()
 	hasher.Write([]byte(text))
 	return hex.EncodeToString(hasher.Sum(nil))
 }
 
 const letterBytes = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
-func RandStringBytesWithTime(n int) string {
-	b := make([]byte, n)
+//sha256 with a n-byte data and return with[:(n+1)]
+func randStringBytes(n int) string {
+	var strlen int
+	strlen = n
+	if n > 64 {
+		strlen = 64
+	}
+	b := make([]byte, strlen)
 	for i := range b {
 		b[i] = letterBytes[rand.Intn(len(letterBytes))]
 	}
-	t := time.Now()
-	date := t.Format(time.RFC3339)
-	return string(b) + "-" + date
+	return getHash(string(b))[:strlen]
 }
 
 // exec an entity command
@@ -303,11 +367,10 @@ func (t *CTTiChaincode) Query(stub shim.ChaincodeStubInterface, function string,
 		return nil, errors.New(jsonResp)
 	}
 
-	jsonResp := "{\"Account\":\"" + account + "\",\"Amount\":\"" + string(Avalbytes) + "\"}"
-	fmt.Printf("Query Response:%s\n", jsonResp)
+	//jsonResp := "{\"Account\":\"" + account + "\",\"Amount\":\"" + string(Avalbytes) + "\"}"
+	//fmt.Printf("Query Response:%s\n", jsonResp)
 	return Avalbytes, nil
 }
-
 func main() {
 	err := shim.Start(new(CTTiChaincode))
 	if err != nil {
