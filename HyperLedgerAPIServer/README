@@ -64,7 +64,7 @@ JSON RPC API
     response - Success
         {
             u'jsonrpc': u'2.0', 
-            u'result': [True, u'Login Success'], 
+            u'result': [True, u'Logout Success'], 
             u'id': 0
         }
     response - Failure
