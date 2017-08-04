@@ -1,0 +1,44 @@
+﻿      {% load static %}
+    <link href="{% static 'transactor/css/bootstrap.css' %}" rel="stylesheet">
+    <link href="{% static 'transactor/css/grid.css' %}" rel="stylesheet">
+    <script type="text/javascript" src="{% static 'transactor/js/jquery-1.12.4.js' %}"></script> 
+    <script type="text/javascript" src="{% static 'transactor/js/bootstrap.js' %}"></script>  
+
+ <div class="modal-dialog well" role="document" style="width: 40%;" >
+    <div class="modal-content well">
+      <div class="modal-header">
+        <a type="button" href="{% url 'index' %}" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></a>
+        <pageTitle class="modal-title" id=LoginModalLabel"><span class="glyphicon glyphicon-phone glyphiconSize" ></span>Login your account:</pageTitle>
+      </div>
+      <div class="modal-body">
+          {% if not Account.isLogin %}
+          <form action="{% url 'login' %}" name="login" method="post"> {% csrf_token %}
+            <div class="well">
+            {% if error %}
+                <p>* 帳號密碼輸入有誤，請重新輸入</p>
+            {% endif %}
+            <div class="form-group">
+                <label for="Account" class="marginleft20p"> <strong>Account:</strong></label>
+                <input name="loginAccount" type="email" class="form-control marginleft20p" id="ACCOUNT_INPUT" placeholder="Account" required >
+            </div>
+            <div class="form-group">
+                <label for="password" class="marginleft20p"> <strong>Password:</strong></label>
+                <input name="loginPassword" type="password" class="form-control marginleft20p" id="PASSWORD_INPUT" placeholder="Password" required >
+            </div>
+            </br>
+             <span  class="pull-right">
+                <input type="hidden" name="loginPage" value="yes">
+                <a id="submit" href="/submit/" class="btn btn-default btn-lg " type="button" >Go to submit</a>
+                <button id="login" class="btn btn-default btn-lg " type="submit" >Login</button>
+            </span>
+            </br>
+            </br>
+          </div> 
+         </form>
+          {% endif %}
+      </div>
+      <div class="modal-footer">
+        <a id="closeView" type="button" href="{% url 'index' %}" class="btn btn-default" data-dismiss="modal">Close</a>
+      </div>
+    </div>
+  </div>

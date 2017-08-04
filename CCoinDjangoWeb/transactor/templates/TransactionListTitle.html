@@ -1,0 +1,17 @@
+﻿{% extends 'BaseTableTemplete.html' %}
+{% block tableID %}{{ TableTransactionControlID }}{% endblock %}
+{% block tableStruct %}
+    <div class="col-md-6">Transaction ID</div>
+    <div class="col-md-3">To User</div>
+    <div class="col-xs-6 col-sm-1">Coins</div>
+    <div class="col-md-2">Time</div>
+    {% if isLogin %}
+    {% for transaction in TransactionLists %}
+        <div class="col-md-6 col-sm-3" style="height:90px">{{ transaction.id }}</div>
+        <div class="col-md-3 col-sm-3" style="height:90px">{{ transaction.toUser }}</div>
+        <div class="col-md-1 col-sm-3" style="height:90px">{{ transaction.coins }}</div>
+        <div class="col-md-2 col-sm-3" style="height:90px">{{ transaction.date }}</div>
+    {% endfor %}
+    {% endif %} 
+{% endblock %}
+   

@@ -1,0 +1,137 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+  <head>
+      {% load static %}
+    <link href="{% static 'transactor/css/bootstrap.css' %}" rel="stylesheet">
+    <link href="{% static 'transactor/css/grid.css' %}" rel="stylesheet">
+    <script type="text/javascript" src="{% static 'transactor/js/jquery-1.12.4.js' %}"></script> 
+    <script type="text/javascript" src="{% static 'transactor/js/bootstrap.js' %}"></script> 
+
+    <meta name="viewport" content="width=device-width, initial-scale=2">
+    <meta charset="utf-8">
+    <title>{{ Title }}</title>
+
+  </head>
+  
+  <body class="backgroundgray">
+    <div class="navbar navbar-default navbar-fixed-top navPadding" style="margin-bottom:30px">   
+      <h4 style="margin-left:60px"><img src="{% static 'transactor/image/CSTI.png' %}" style="width:30%;height:30%;margin-bottom:30px" /> 
+        <span class="glyphicon glyphicon-phone glyphiconSize" ></span> {{ Title }}</h4>
+     </div>
+ <div class="container" style="margin-top:40px"> 
+    {% if isLogin %}
+      <div class="container"> 
+      <h3>Hi <strong>{{ loginMessage }}</strong>, Welcome!!</h3>
+          </div>
+     {% endif %}
+        <div class="container" > 
+                  <div class="container"> 
+                    <div class="well">
+                      <div class="pull-right">
+                      <a class="btn btn-sm changeButton black" type="button" href="/">
+                      <span id="refresh"class="glyphicon glyphicon-refresh glyphiconSizeButton" aria-hidden="true"></span>
+                      </a>
+                          {% if  isAdmin %}
+                      <a class="btn btn-sm changeButton black" href="admin/" type="button"  aria-expanded="false">
+                      <span class="glyphicon glyphicon-cog glyphiconSizeButton" aria-hidden="true"></span>
+                      </a> 
+                          {% endif %}
+                     {% if not isLogin %}
+                      <a class="btn btn-sm changeButton black " href="login/" type="button"  aria-expanded="false" >
+                        <button id="login_status" class="btn btn-default btn-lg" type="button" >{{ LOGIN_STATUS }}</button>
+                      </a> 
+                     {% elif isLogin %}
+                      <a class="btn btn-sm changeButton black " href="login/" type="button"  aria-expanded="false" >
+                        <form action="{% url 'logout' %}" method="post">{% csrf_token %}
+                        <button id="logout_status" class="btn btn-default btn-lg" type="submit"  >{{ LOGOUT_STATUS }}</button>
+                        </form>
+                      </a> 
+                     {% endif %}
+                      </div>
+                     {% if not isLogin %}
+                        <h3><span class="glyphicon glyphicon-plus" ></span> Please <strong>login</strong> to your C-Coin account.</h3>
+                     {% elif isLogin %}
+                       <!--<h3><span class="glyphicon glyphicon-plus" ></span> You can manage your C-Coin account.</h3>-->
+                               <h3><span class="glyphicon glyphicon-plus" ></span> You still have <strong>{{ UserCoins }}</strong> Coins.</h3>
+                     {% endif %}
+                     </div>
+
+                      <div class="collapse" id="collapseExample">
+         
+                          <div class="well">
+                               <div class="page-header">
+                                     <h2><strong>{{ Configure }}:</strong></h2> 
+
+                               </div>
+                               <div class="page-header">
+                                   <h2><strong>{{ StatusTitle }}:</strong></h2>
+                                   <h3><span class="glyphicon glyphicon-plus" ></span> {{ JSONRPCServer }}</h3>  
+                                <div class="status col-md-6" ><strong>{{ firstStatus }} status: </strong><span id="ContainerStatus" class="glyphicon glyphicon-off" ></span></div>
+                                <div class="status col-md-6" ><strong>{{ SecStatus }} status: </strong><span id="ManagerStatus" class="glyphicon glyphicon-off" ></span></div>
+                                <div class="status col-md-6" ><strong>{{ thirdStatus }} status: </strong><span id="ResulterStatus" class="glyphicon glyphicon-off" ></span></div>
+                                <div class="status col-md-6" ><strong>{{ fourStatus }} status: </strong><span id="ListenrStatus" class="glyphicon glyphicon-off" ></span></div>
+                                    <div class="pull-right ">
+                                        <span class="glyphiconStatusButton"><span class="glyphicon glyphicon-off  green" ></span> Online</span>
+                                        <span class="glyphiconStatusButton"><span class="glyphicon glyphicon-off  red" ></span> Offline</span>
+                                    </div>
+                                </div>
+                          </div>
+                      </div>
+
+                     <div class="collapse" id="collapseFunction">
+         
+                          <div class="well">
+                               <div class="page-header">
+                                     <h2><strong>{{ Configure }}:</strong></h2> 
+                               </div>
+                               <div class="page-header">
+                                   <h2><strong>{{ StatusTitle }}:</strong></h2>
+                                   <h3><span class="glyphicon glyphicon-plus" ></span> {{ JSONRPCServer }}</h3>  
+                                <div class="status col-md-6" ><strong>{{ firstStatus }} status: </strong><span id="ContainerStatus" class="glyphicon glyphicon-off" ></span></div>
+                                <div class="status col-md-6" ><strong>{{ SecStatus }} status: </strong><span id="ManagerStatus" class="glyphicon glyphicon-off" ></span></div>
+                                <div class="status col-md-6" ><strong>{{ thirdStatus }} status: </strong><span id="ResulterStatus" class="glyphicon glyphicon-off" ></span></div>
+                                <div class="status col-md-6" ><strong>{{ fourStatus }} status: </strong><span id="ListenrStatus" class="glyphicon glyphicon-off" ></span></div>
+                                    <div class="pull-right ">
+                                        <span class="glyphiconStatusButton"><span class="glyphicon glyphicon-off  green" ></span> Online</span>
+                                        <span class="glyphiconStatusButton"><span class="glyphicon glyphicon-off  red" ></span> Offline</span>
+                                    </div>
+                                </div>
+                          </div>
+                      </div>
+   
+                    </div>
+
+                  </br>
+            <form name="postTransaction" action="{% url 'transaction' %}" method="post"> {% csrf_token %}
+           {% include 'TransactionSender.html' %}
+            </form>
+            <!-- Nav tabs -->
+                <div class="container"> 
+
+                           <h2><strong>{{ TransactionListTitle }}:</strong></h2>
+        
+                            <div class="center-block">
+                                 <div class="tab-content">
+                                    <div role="tabpanel" class="tab-pane active" id="Running">
+             
+                                        {{ transactionList }}
+                                    </div>
+                                     <div role="tabpanel" class="tab-pane" id="Preparing">
+                                         {% include 'TransactionListTitle.html' %} 
+                                    </div>
+                                      <div role="tabpanel" class="tab-pane" id="all">
+                                    {% include 'TransactionListTitle.html' %}   
+                                    </div>
+                                </div>   
+                          </div>
+
+                  </div>
+    </div>
+
+  </div> 
+      <!--POP View -->
+
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+   
+  </body>
+</html>

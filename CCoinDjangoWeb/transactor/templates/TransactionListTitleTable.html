@@ -1,0 +1,33 @@
+﻿{% extends 'BaseTableTemplete.html' %}
+{% block tableID %}{{ TableTransactionControlID }}{% endblock %}
+{% block tableStruct %}
+<div class="well">
+    <table class="table table-striped table-hover">
+        <tbody>
+        <tr>
+            <td>Index</td>
+            <td>Transaction Type</td>
+            <td>From User</td>
+            <td>To User</td>
+            <td>Coins</td>
+            <td>Time</td>
+            <td>Transaction ID</td>
+        </tr></tbody>
+        {% if isLogin %}
+        {% for transaction in TransactionLists %}
+        <tbody>
+        <tr>
+            <td><span class="badge badgeSize">{{ forloop.counter }}</span></td>
+            <td>{{ transaction.getTypeString }}</td>
+            <td>{{ transaction.owner }}</td>
+            <td>{{ transaction.toUser }}</td>
+            <td>{{ transaction.coins }}</td>
+            <td>{{ transaction.date }}</td>
+            <td>{{ transaction.id }}</td>
+        </tr></tbody>
+        {% endfor %}
+        {% endif %} 
+    </table>
+</div>
+{% endblock %}
+   

@@ -1,0 +1,31 @@
+﻿{% extends 'PanelTemplete.html' %}
+
+{% block InputPanel %}
+    {% if transactionPost %}
+     <p>* {{ transactionPostResult }}</p>
+    {% endif %}
+    <div class="input-group" style="width:92%">
+        <span class="input-group-addon" id="basic-addon1" style="width:22%" ><strong>Transfer ID:</strong></span>
+        <input type="email" class="form-control marginleft20p" name="TrnasactionTargert" placeholder="For example, abc@abc.com" required>
+    </div>
+
+    <div class="input-group" style="width:92%">
+        <span class="input-group-addon" id="basic-addon1" style="width:22%" ><strong>Coin Number:</strong></span>
+        <input type="number" class="form-control marginleft20p" name="TrnasactionCoin" placeholder="For example, 100 or 10000" required>
+    </div>
+ <!--
+    <div class="input-group">
+        <span class="input-group-addon" id="basic-addon1" style="width:40px"><strong>Transfer ID:</strong></span>
+        <input type="email" class="form-control marginleft20p" id="TrnasactionTargert" placeholder="For example, aaaa">
+    </div>
+    </br>
+    </br>
+    <div class="input-group">
+        <span class="input-group-addon" id="basic-addon1" style="width:40px"><strong>Coin Number:</strong></span>
+        <input type="number" class="form-control marginleft20p" id="TrnasactionCoin" placeholder="For example, 100 or 10000">
+    </div>-->
+{% endblock %}    
+
+{% block Button %}
+    <button id="submit" class="btn btn-default btn-lg" type="submit" >Publish</button>
+{% endblock %} 

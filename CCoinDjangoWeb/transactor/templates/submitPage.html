@@ -1,0 +1,46 @@
+﻿      {% load static %}
+    <link href="{% static 'transactor/css/bootstrap.css' %}" rel="stylesheet">
+    <link href="{% static 'transactor/css/grid.css' %}" rel="stylesheet">
+    <script type="text/javascript" src="{% static 'transactor/js/jquery-1.12.4.js' %}"></script> 
+    <script type="text/javascript" src="{% static 'transactor/js/bootstrap.js' %}"></script>  
+
+ <div class="modal-dialog well" role="document" style="width: 40%;" >
+    <div class="modal-content well">
+      <div class="modal-header">
+        <a type="button" href="{% url 'index' %}" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></a>
+        <pageTitle class="modal-title" id=SubmitModalLabel" ><span class="glyphicon glyphicon-phone glyphiconSize" ></span>Create new account:</pageTitle>
+    
+      </div>
+      <div class="modal-body">
+        <form action="{% url 'submit' %}" name="submit" method="post"> {% csrf_token %}
+            <div class="well">
+            {% if error %}
+                <p>* {{ ErrorMessage }}</p>
+            {% endif %}
+            <div class="form-group">
+                <label for="Account" class="marginleft20p"> <strong>Account:</strong></label>
+                <input name="submitAccount" type="email" class="form-control marginleft20p" id="ACCOUNT_INPUT" placeholder="Account" required>
+            </div>
+            <div class="form-group">
+                <label for="password" class="marginleft20p"> <strong>Password:</strong></label>
+                <input name="submitPassword" type="password" class="form-control marginleft20p" id="PASSWORD_INPUT" placeholder="Password" required>
+            </div>
+           <div class="form-group">
+                <label for="password" class="marginleft20p"> <strong>Re-type Password:</strong></label>
+                <input name="submitRePassword" type="password" class="form-control marginleft20p" id="PASSWORD_INPUT" placeholder="Password" required>
+            </div>
+            </br>
+             <span  class="pull-right">      
+                 <input type="hidden" name="SubmitPage" value="yes">
+                 <button id="submit" class="btn btn-default btn-lg " type="submit" >submit</button>
+            </span>
+            </br>
+            </br>
+          </div>  
+        </form>
+      </div>
+      <div class="modal-footer">
+        <a id="closeView" href="{% url 'index' %}" type="button" class="btn btn-default" data-dismiss="modal">Close</a>
+      </div>
+    </div>
+  </div>
